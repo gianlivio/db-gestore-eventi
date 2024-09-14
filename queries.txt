@@ -1,0 +1,53 @@
+-- Selezionare tutti gli eventi gratis (cioè con prezzo nullo)
+SELECT * FROM events WHERE price = 0;
+
+-- Selezionare tutte le location in ordine alfabetico
+SELECT * FROM locations ORDER BY name ASC;
+
+-- Selezionare tutti gli eventi che costano meno di 20 euro e durano meno di 3 ore
+SELECT * FROM events WHERE price < 20 AND TIMESTAMPDIFF(HOUR, start_time, end_time) < 3;
+
+-- Selezionare tutti gli eventi di dicembre 2023
+SELECT * FROM events WHERE MONTH(date) = 12 AND YEAR(date) = 2023;
+
+-- Selezionare tutti gli eventi con una durata maggiore alle 2 ore
+SELECT * FROM events WHERE TIMESTAMPDIFF(HOUR, start_time, end_time) > 2;
+
+-- Selezionare tutti gli eventi, mostrando nome, data di inizio, ora di inizio, ora di fine e durata totale
+SELECT title, date, start_time, end_time, TIMESTAMPDIFF(HOUR, start_time, end_time) AS duration FROM events;
+
+-- Selezionare tutti gli eventi aggiunti da “Fabiano Lombardo” (id: 1202)
+SELECT * FROM events WHERE creator_id = 1202;
+
+-- Selezionare il numero totale di eventi per ogni fascia di prezzo
+SELECT price, COUNT(*) AS total_events FROM events GROUP BY price;
+
+-- Selezionare tutti gli utenti admin ed editor
+SELECT * FROM users WHERE role_id IN (1, 2);
+
+-- Selezionare tutti i concerti (eventi con il tag “concerti”)
+SELECT e.* FROM events e INNER JOIN event_tag et ON e.id = et.event_id INNER JOIN tags t ON t.id = et.tag_id WHERE t.name = 'concerti';
+
+-- Selezionare tutti i tag e il prezzo medio degli eventi a loro collegati
+SELECT t.name, AVG(e.price) AS average_price FROM tags t INNER JOIN event_tag et ON t.id = et.tag_id INNER JOIN events e ON e.id = et.event_id GROUP BY t.name;
+
+-- Selezionare tutte le location e mostrare quanti eventi si sono tenuti in ognuna di esse
+SELECT l.name, COUNT(e.id) AS total_events FROM locations l LEFT JOIN events e ON l.id = e.location_id GROUP BY l.name;
+
+-- Selezionare tutti i partecipanti per l’evento “Concerto Classico Serale” (slug: concerto-classico-serale, id: 34)
+SELECT u.* FROM users u INNER JOIN bookings b ON u.id = b.user_id WHERE b.event_id = 34;
+
+-- Selezionare tutti i partecipanti all’evento “Festival Jazz Estivo” (slug: festival-jazz-estivo, id: 2) specificando nome e cognome
+SELECT u.name, u.surname FROM users u INNER JOIN bookings b ON u.id = b.user_id WHERE b.event_id = 2;
+
+-- Selezionare tutti gli eventi sold out (dove il totale delle prenotazioni è uguale ai biglietti totali per l’evento)
+SELECT e.* FROM events e INNER JOIN bookings b ON e.id = b.event_id GROUP BY e.id HAVING SUM(b.quantity) = e.tickets_total;
+
+-- Selezionare tutte le location in ordine per chi ha ospitato più eventi
+SELECT l.name, COUNT(e.id) AS total_events FROM locations l LEFT JOIN events e ON l.id = e.location_id GROUP BY l.name ORDER BY total_events DESC;
+
+-- Selezionare tutti gli utenti che si sono prenotati a più di 70 eventi
+SELECT u.* FROM users u INNER JOIN bookings b ON u.id = b.user_id GROUP BY u.id HAVING COUNT(b.event_id) > 70;
+
+-- Selezionare tutti gli eventi, mostrando il nome dell’evento, il nome della location, il numero di prenotazioni e il totale di biglietti ancora disponibili per l’evento
+SELECT e.title, l.name AS location_name, SUM(b.quantity) AS total_bookings, (e.tickets_total - SUM(b.quantity)) AS tickets_left FROM events e INNER JOIN locations l ON e.location_id = l.id LEFT JOIN bookings b ON e.id = b.event_id GROUP BY e.id;
